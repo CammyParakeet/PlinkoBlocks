@@ -5,11 +5,11 @@ import java.util.UUID;
 
 public record PlinkoAnimation(
         UUID id,
-        List<SimulatedBallFrame> frames,
+        List<PlinkoKeyframe> frames,
         int finalSlot
 ) {
 
-    public SimulatedBallFrame getFrame(int tick) {
+    public PlinkoKeyframe getFrame(int tick) {
         return (tick >= 0 && tick < totalTicks()) ? frames.get(tick) : null;
     }
 
