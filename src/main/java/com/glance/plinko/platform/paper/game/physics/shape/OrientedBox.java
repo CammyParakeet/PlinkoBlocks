@@ -28,4 +28,16 @@ public record OrientedBox(
 
         return null;
     }
+
+    /**
+     * @return the 3 local unit axes transformed into world space
+     */
+    public Vector3f[] axes() {
+        return new Vector3f[] {
+            rotation.getColumn(0, new Vector3f()), // local X axis
+            rotation.getColumn(1, new Vector3f()), // local Y axis
+            rotation.getColumn(2, new Vector3f()) // local Z axis
+        };
+    }
+
 }

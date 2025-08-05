@@ -13,7 +13,7 @@ public class PhysicsCollider {
     }
 
     public CollisionResult resolveOBBvsOBB(OrientedBox a, OrientedBox b) {
-        // TODO implement SAT projection
+        return PhysicsSeparatingAxis.resolveOBBvsOBB(a, b);
     }
 
 }
