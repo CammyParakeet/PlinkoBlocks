@@ -9,6 +9,7 @@ import org.joml.Matrix3f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+// todo do we have display here or somewhere else | reference to updater/renderer?
 @Getter
 @Setter
 public class PlinkoObject {
