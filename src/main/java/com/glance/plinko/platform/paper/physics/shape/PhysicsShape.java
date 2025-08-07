@@ -1,6 +1,6 @@
-package com.glance.plinko.platform.paper.game.physics.shape;
+package com.glance.plinko.platform.paper.physics.shape;
 
-import com.glance.plinko.platform.paper.game.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
 import org.joml.Vector3f;
 
 public sealed interface PhysicsShape permits OrientedBox {

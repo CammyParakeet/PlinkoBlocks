@@ -1,6 +1,6 @@
-package com.glance.plinko.platform.paper.game.physics.collision;
+package com.glance.plinko.platform.paper.physics.collision;
 
-import com.glance.plinko.platform.paper.game.physics.shape.PhysicsShape;
+import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
 import org.joml.Vector3f;
 
 public record CollisionResult(

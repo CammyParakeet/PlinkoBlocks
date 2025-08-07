@@ -1,7 +1,7 @@
 package com.glance.plinko.platform.paper.config;
 
 import com.glance.plinko.platform.paper.display.DisplayOptions;
-import com.glance.plinko.platform.paper.game.physics.shape.ShapeType;
+import com.glance.plinko.platform.paper.physics.shape.ShapeType;
 import org.bukkit.Material;
 
 public record PlinkoObjectConfig(

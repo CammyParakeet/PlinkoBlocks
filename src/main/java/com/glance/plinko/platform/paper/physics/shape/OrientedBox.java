@@ -1,7 +1,7 @@
-package com.glance.plinko.platform.paper.game.physics.shape;
+package com.glance.plinko.platform.paper.physics.shape;
 
-import com.glance.plinko.platform.paper.game.physics.collision.CollisionResult;
-import com.glance.plinko.platform.paper.game.physics.collision.PhysicsCollider;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.collision.PhysicsCollider;
 import org.joml.Matrix3f;
 import org.joml.Vector3f;
 

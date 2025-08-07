@@ -1,10 +1,13 @@
 package com.glance.plinko.platform.paper.game.simulation;
 
-import com.glance.plinko.platform.paper.game.animation.PlinkoAnimation;
-import com.glance.plinko.platform.paper.game.animation.PlinkoKeyframe;
-import com.glance.plinko.platform.paper.game.physics.collision.CollisionResponse;
-import com.glance.plinko.platform.paper.game.physics.collision.CollisionResult;
-import com.glance.plinko.platform.paper.game.physics.shape.PhysicsShape;
+import com.glance.plinko.platform.paper.animation.PlinkoAnimation;
+import com.glance.plinko.platform.paper.animation.PlinkoKeyframe;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResponse;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
+import com.glance.plinko.utils.lifecycle.Manager;
+import com.google.auto.service.AutoService;
+import com.google.inject.Singleton;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -13,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PlinkoSimulator {
+@Singleton
+@AutoService(Manager.class)
+public class PlinkoSimulator implements Manager {
 
     private static final Vector3f GRAVITY = new Vector3f(0F, -0.03F, 0F); // todo configurable
     private static final int MAX_TICKS = 200; // todo configurable

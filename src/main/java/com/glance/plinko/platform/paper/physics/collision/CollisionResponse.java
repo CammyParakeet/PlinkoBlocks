@@ -1,4 +1,4 @@
-package com.glance.plinko.platform.paper.game.physics.collision;
+package com.glance.plinko.platform.paper.physics.collision;
 
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import lombok.experimental.UtilityClass;

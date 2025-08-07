@@ -1,4 +1,4 @@
-package com.glance.plinko.platform.paper.game.animation;
+package com.glance.plinko.platform.paper.animation;
 
 import java.util.List;
 import java.util.UUID;

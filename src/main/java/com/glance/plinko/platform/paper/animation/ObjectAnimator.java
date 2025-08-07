@@ -1,4 +1,4 @@
-package com.glance.plinko.platform.paper.game.animation;
+package com.glance.plinko.platform.paper.animation;
 
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 
@@ -20,7 +20,8 @@ public class ObjectAnimator {
         PlinkoKeyframe frame = animation.getFrame(currentTick++);
         if (frame == null) return true;
 
-        // todo render update
+        // todo decide where we're storing the display entity related to the PlinkoObject
+        // then use display update util
 
         return currentTick >= animation.totalTicks();
     }

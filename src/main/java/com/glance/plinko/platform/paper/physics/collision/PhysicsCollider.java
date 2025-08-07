@@ -1,7 +1,7 @@
-package com.glance.plinko.platform.paper.game.physics.collision;
+package com.glance.plinko.platform.paper.physics.collision;
 
-import com.glance.plinko.platform.paper.game.physics.shape.OrientedBox;
-import com.glance.plinko.platform.paper.game.physics.shape.PhysicsShape;
+import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
+import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 

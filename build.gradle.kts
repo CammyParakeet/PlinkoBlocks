@@ -34,6 +34,7 @@ dependencies {
 
     // DI
     implementation("com.google.inject:guice:7.0.0")
+    implementation("com.google.inject.extensions:guice-assistedinject:7.0.0")
     annotationProcessor("com.google.auto.service:auto-service:1.1.1")
     compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
 }

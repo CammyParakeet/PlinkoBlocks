@@ -1,4 +1,4 @@
-package com.glance.plinko.platform.paper.game.animation;
+package com.glance.plinko.platform.paper.animation;
 
 import com.glance.plinko.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
