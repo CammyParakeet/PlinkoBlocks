@@ -6,17 +6,28 @@ import org.bukkit.util.Vector;
 public record DisplayOptions(
     Type type,
     Material material,
-    Vector scale
+    Vector scale,
+    boolean startInterpolation
 ) {
     public static DisplayOptions defaultBlock(Material material) {
         return new DisplayOptions(
                 Type.BLOCK,
                 material,
-                new Vector(1.0, 1.0, 1.0)
+                new Vector(1.0, 1.0, 1.0),
+                false
         );
     }
 
-    enum Type {
+    public static DisplayOptions defaultItem(Material material) {
+        return new DisplayOptions(
+                Type.ITEM,
+                material,
+                new Vector(1.0, 1.0, 1.0),
+                false
+        );
+    }
+
+    public enum Type {
         ITEM, BLOCK, TEXT
     }
 }

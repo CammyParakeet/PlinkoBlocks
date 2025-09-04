@@ -8,5 +8,10 @@ import java.util.UUID;
 public record PlinkoRunContext(
    UUID runId,
    PlinkoObjectConfig config,
-   Location origin
-) {}
+   Location origin,
+   boolean debug
+) {
+
+
+
+}

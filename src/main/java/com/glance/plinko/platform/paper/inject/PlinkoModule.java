@@ -1,6 +1,9 @@
 package com.glance.plinko.platform.paper.inject;
 
+import com.glance.plinko.platform.paper.display.DefaultDisplayFactory;
 import com.glance.plinko.platform.paper.display.PlinkoDisplayFactory;
+import com.glance.plinko.platform.paper.game.simulation.factory.DefaultPhysicsShapeFactory;
+import com.glance.plinko.platform.paper.game.simulation.factory.PhysicsShapeFactory;
 import com.glance.plinko.platform.paper.game.simulation.factory.PlinkoObjectFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -20,7 +23,8 @@ public class PlinkoModule extends AbstractModule {
         this.bind(Plugin.class).toInstance(plugin);
         this.bind(JavaPlugin.class).toInstance((JavaPlugin) plugin);
 
+        this.bind(PhysicsShapeFactory.class).to(DefaultPhysicsShapeFactory.class);
+        this.bind(PlinkoDisplayFactory.class).to(DefaultDisplayFactory.class);
         this.install(new FactoryModuleBuilder().build(PlinkoObjectFactory.class));
-        this.install(new FactoryModuleBuilder().build(PlinkoDisplayFactory.class));
     }
 }

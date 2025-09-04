@@ -3,6 +3,7 @@ package com.glance.plinko.platform.paper.animation;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public record PlinkoKeyframe(
         Transformation transform,
@@ -28,6 +29,10 @@ public record PlinkoKeyframe(
                 transform.getScale().y,
                 transform.getScale().z
         );
+    }
+
+    public Vector3f scale3f() {
+        return transform.getScale();
     }
 
 }

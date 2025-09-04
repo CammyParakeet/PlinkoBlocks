@@ -4,6 +4,7 @@ import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 @UtilityClass
 public class PhysicsCollider {
@@ -12,7 +13,10 @@ public class PhysicsCollider {
         return a.collide(b);
     }
 
-    public CollisionResult resolveOBBvsOBB(OrientedBox a, OrientedBox b) {
+    public CollisionResult resolveOBBvsOBB(
+            OrientedBox a,
+            OrientedBox b
+    ) {
         return PhysicsSeparatingAxis.resolveOBBvsOBB(a, b);
     }
 

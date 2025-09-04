@@ -25,7 +25,10 @@ public class PhysicsSeparatingAxis {
      * @param b Second OBB
      * @return {@link CollisionResult} if intersecting, otherwise null
      */
-    public CollisionResult resolveOBBvsOBB(OrientedBox a, OrientedBox b) {
+    public CollisionResult resolveOBBvsOBB(
+        OrientedBox a,
+        OrientedBox b
+    ) {
         // Local axes in Worldspace
         Vector3f[] axesA = a.axes();
         Vector3f[] axesB = b.axes();
@@ -74,7 +77,7 @@ public class PhysicsSeparatingAxis {
         if (smallestAxis == null) return null;
 
         // return basic collision result using the smallest overlap axis - TODO based on other factors
-        Vector3f contact = new Vector3f(a.center().add(d.normalize().mul(CONTACT_POINT_BLEND)));
+        Vector3f contact = new Vector3f(a.center()).add(d.normalize().mul(CONTACT_POINT_BLEND));
         Vector3f normal = new Vector3f(smallestAxis).normalize();
 
         return new CollisionResult(contact, normal, smallestOverlap, b);
@@ -96,8 +99,8 @@ public class PhysicsSeparatingAxis {
         // For each local axis of the box: project it and scale by half the radius
         for (int i = 0; i < 3; i++) {
             Vector3f localAxis = rot.getColumn(i, new Vector3f());
-            float scale = half.get(i);
-            projection += Math.abs(axis.dot(localAxis) * scale);
+            float halfExtent = half.get(i) * box.scale().get(i);
+            projection += Math.abs(axis.dot(localAxis) * halfExtent);
         }
 
         return projection;

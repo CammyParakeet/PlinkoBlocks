@@ -13,12 +13,18 @@ import org.joml.Vector3f;
  * @param center Center position in world space
  * @param halfSize Half-size along local xyz axes
  * @param rotation 3x3 rotation matrix defining orientation
+ * @param scale Per-axis scaling applied to the halfSize
  */
 public record OrientedBox(
     Vector3f center,
     Vector3f halfSize,
-    Matrix3f rotation
+    Matrix3f rotation,
+    Vector3f scale
 ) implements PhysicsShape {
+
+    public OrientedBox(Vector3f center, Vector3f halfSize, Matrix3f rotation) {
+        this(center, halfSize, rotation, new Vector3f(1F));
+    }
 
     @Override
     public CollisionResult collide(PhysicsShape other) {

@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 @AutoService(Manager.class)
-public class PlinkoRenderer implements Manager {
+public final class PlinkoRenderer implements Manager {
 
     private final Plugin plugin;
     private final Set<ObjectAnimator> activeAnimations = ConcurrentHashMap.newKeySet();
@@ -51,6 +51,10 @@ public class PlinkoRenderer implements Manager {
     @Override
     public void onEnable() {
         start();
+    }
+
+    public Set<ObjectAnimator> activeAnimations() {
+        return Set.copyOf(activeAnimations);
     }
 
     @Override

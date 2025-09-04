@@ -57,7 +57,13 @@ tasks {
     withType<RunServer> {
         systemProperty("com.mojang.eula.agree", "true")
     }
+
+    runServer {
+        version = "1.21.6"
+    }
+
 }
+
 
 configure<PaperPluginDescription> {
     name = "PlinkoBlocks"
