@@ -27,6 +27,24 @@ public record DisplayOptions(
         );
     }
 
+    public static DisplayOptions marker(Material material) {
+        return new DisplayOptions(
+                Type.ITEM,
+                material,
+                new Vector(0.05, 0.05, 0.05),
+                false
+        );
+    }
+
+    public static DisplayOptions blockMarker(Material material) {
+        return new DisplayOptions(
+                Type.BLOCK,
+                material,
+                new Vector(0.05, 0.05, 0.05),
+                false
+        );
+    }
+
     public enum Type {
         ITEM, BLOCK, TEXT
     }

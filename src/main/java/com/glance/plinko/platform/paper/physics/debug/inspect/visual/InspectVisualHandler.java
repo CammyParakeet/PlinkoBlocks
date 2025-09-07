@@ -1,4 +1,4 @@
-package com.glance.plinko.platform.paper.physics.debug.inspect;
+package com.glance.plinko.platform.paper.physics.debug.inspect.visual;
 
 import com.glance.plinko.platform.paper.display.DisplayOptions;
 import com.glance.plinko.platform.paper.display.DisplayUtils;
@@ -6,6 +6,7 @@ import com.glance.plinko.platform.paper.display.Transformer;
 import com.glance.plinko.platform.paper.display.debug.LineDisplays;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.debug.inspect.InspectSession;
 import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Location;
@@ -84,7 +85,7 @@ public class InspectVisualHandler {
     ) {
         switch (type) {
             case SHAPE_CORNERS -> renderCorners(player.getWorld(), session);
-            case COLLISION -> {}
+            case COLLISION -> renderCollision(player.getWorld(), session);
             case KINEMATICS -> renderKinematics(player.getWorld(), session);
         }
     }
@@ -149,12 +150,19 @@ public class InspectVisualHandler {
         }
     }
 
-    // todo might need some origin loc info
     private void renderCollision(
         @NotNull World world,
-        @NotNull CollisionResult result
+        @NotNull InspectSession session
     ) {
+        clear(InspectVisualType.COLLISION);
+        CollisionResult result = session.getLastResult();
+        if (result == null) return;
 
+        PlinkoObject main = session.getObject(0);
+        if (main == null || main.isImmovable()) return;
+        if (!(main.currentShape() instanceof OrientedBox box)) return;
+
+        DebugCollisionVisuals.renderCollision(world, box, result, 1.0F, 1.0F, this);
     }
 
     private void renderKinematics(

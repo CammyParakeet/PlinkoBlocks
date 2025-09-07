@@ -2,6 +2,7 @@ package com.glance.plinko.platform.paper.physics.debug.inspect;
 
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.debug.inspect.visual.InspectVisualHandler;
 import com.glance.plinko.platform.paper.utils.math.VelocityState;
 import lombok.Getter;
 import lombok.Setter;

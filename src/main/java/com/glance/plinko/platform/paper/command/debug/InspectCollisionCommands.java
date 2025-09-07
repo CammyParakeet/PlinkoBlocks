@@ -4,13 +4,13 @@ import com.glance.plinko.platform.paper.command.engine.CommandHandler;
 import com.glance.plinko.platform.paper.config.PlinkoObjectConfig;
 import com.glance.plinko.platform.paper.display.DisplayOptions;
 import com.glance.plinko.platform.paper.display.PlinkoDisplayFactory;
-import com.glance.plinko.platform.paper.display.Transformer;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoRunContext;
 import com.glance.plinko.platform.paper.game.simulation.factory.PlinkoObjectFactory;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
 import com.glance.plinko.platform.paper.physics.debug.inspect.InspectSession;
-import com.glance.plinko.platform.paper.physics.debug.inspect.InspectVisualHandler;
+import com.glance.plinko.platform.paper.physics.debug.inspect.info.InspectSessionInfo;
+import com.glance.plinko.platform.paper.physics.debug.inspect.visual.InspectVisualHandler;
 import com.glance.plinko.platform.paper.physics.debug.inspect.InspectorManager;
 import com.glance.plinko.platform.paper.physics.debug.inspect.tool.InspectorToolBuilder;
 import com.glance.plinko.platform.paper.physics.debug.inspect.tool.InspectorToolType;
@@ -18,20 +18,19 @@ import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Axis;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.UUID;
 
@@ -40,22 +39,25 @@ import java.util.UUID;
 @AutoService(CommandHandler.class)
 public class InspectCollisionCommands implements CommandHandler {
 
+    private final Plugin plugin;
     private final InspectorManager inspectorManager;
     private final PlinkoObjectFactory objectFactory;
     private final PlinkoDisplayFactory displayFactory;
 
     @Inject
     public InspectCollisionCommands(
-            @NotNull final InspectorManager inspectorManager,
-            @NotNull final PlinkoObjectFactory objectFactory,
-            @NotNull final PlinkoDisplayFactory displayFactory
+        @NotNull final Plugin plugin,
+        @NotNull final InspectorManager inspectorManager,
+        @NotNull final PlinkoObjectFactory objectFactory,
+        @NotNull final PlinkoDisplayFactory displayFactory
     ) {
+        this.plugin = plugin;
         this.inspectorManager = inspectorManager;
         this.displayFactory = displayFactory;
         this.objectFactory = objectFactory;
     }
 
-    @Command("inspect-collision setup [mass0] [mass1]")
+    @Command("inspect-collision [mass0] [mass1]")
     public void setup(
         @NotNull Player player,
         @Nullable @Argument("mass0") Float mass0,
@@ -107,12 +109,19 @@ public class InspectCollisionCommands implements CommandHandler {
         inv.setItem(4, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_CORNERS));
         inv.setItem(5, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_KINETICS));
         inv.setItem(6, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_DIRECTION));
-        inv.setItem(26, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_SCALE));
+        inv.setItem(33, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_SCALE));
+        inv.setItem(34, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_COLLISION));
         inv.setItem(7, InspectorToolBuilder.buildTool(InspectorToolType.RESET));
         inv.setItem(8, InspectorToolBuilder.buildTool(InspectorToolType.EXIT));
     }
 
     // todo realtime collision result setup
+
+    @Command("inspect-collision dump")
+    public void dumpStats(@NotNull Player player) {
+        InspectSession session = inspectorManager.getOrCreate(player);
+        plugin.getLogger().info(InspectSessionInfo.debugDump(session));
+    }
 
     @Command("inspect-collision collide")
     public void collide(@NotNull Player player) {
@@ -133,6 +142,10 @@ public class InspectCollisionCommands implements CommandHandler {
         }
 
         session.setLastResult(result);
+
+        if (session.getVisualHandler().isEnabled(InspectVisualHandler.InspectVisualType.COLLISION)) {
+            session.updateVisuals(player);
+        }
 
         player.sendMessage("Collision detected: " + result);
     }
@@ -168,18 +181,25 @@ public class InspectCollisionCommands implements CommandHandler {
         inspectorManager.scaleObject(player, slot, x, y, z);
     }
 
-    @Command("inspect-collision toggle-corners")
-    public void toggleCorners(@NotNull Player player) {
+    @Command("inspect-collision graphics toggle-corners")
+    public void toggleCornerGraphics(@NotNull Player player) {
         InspectSession session = inspectorManager.getOrCreate(player);
         session.getVisualHandler().toggle(
                 player, InspectVisualHandler.InspectVisualType.SHAPE_CORNERS, session);
     }
 
-    @Command("inspect-collision toggle-kinematics")
-    public void toggleKinematics(@NotNull Player player) {
+    @Command("inspect-collision graphics toggle-kinematics")
+    public void toggleKinematicGraphics(@NotNull Player player) {
         @NotNull InspectSession session = inspectorManager.getOrCreate(player);
         session.getVisualHandler().toggle(
                 player, InspectVisualHandler.InspectVisualType.KINEMATICS, session);
+    }
+
+    @Command("inspect-collision graphics toggle-collision")
+    public void toggleCollisionGraphics(@NotNull Player player) {
+        @NotNull InspectSession session = inspectorManager.getOrCreate(player);
+        session.getVisualHandler().toggle(
+                player, InspectVisualHandler.InspectVisualType.COLLISION, session);
     }
 
     @Command("inspect-collision set-velocity-dir")

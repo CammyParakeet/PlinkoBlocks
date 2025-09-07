@@ -2,16 +2,17 @@ package com.glance.plinko.platform.paper.physics.debug.inspect;
 
 import com.glance.plinko.platform.paper.display.Transformer;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
-import com.glance.plinko.platform.paper.utils.math.VectorUtils;
 import com.glance.plinko.utils.lifecycle.Manager;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Axis;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -38,6 +39,17 @@ public class InspectorManager implements Manager {
 
     @Override
     public void onDisable() {
+        log.warn("Disabling Inspector Manager");
+        this.sessions.forEach((id, s) -> {
+            log.warn("Disabling session for {}", id);
+            @Nullable Player p = Bukkit.getPlayer(id);
+            if (p != null) {
+                log.warn("Clearing player inv? {}", p.getName());
+                // todo restore
+                p.getInventory().clear();
+            }
+            s.clearVisuals();
+        });
         this.sessions.clear();
     }
 

@@ -35,6 +35,16 @@ public class LineDisplays {
 
     public @NotNull DebugArrow spawnDebugArrow(
             @NotNull Location start,
+            @NotNull Vector direction,
+            double length,
+            @NotNull Material mat
+    ) {
+        Location end = start.clone().add(direction.clone().normalize().multiply(length));
+        return spawnDebugArrow(start, end, 0.025F, mat, Material.YELLOW_CONCRETE);
+    }
+
+    public @NotNull DebugArrow spawnDebugArrow(
+            @NotNull Location start,
             @NotNull Location end,
             float thickness,
             @NotNull Material lineMaterial,

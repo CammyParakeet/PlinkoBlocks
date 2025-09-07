@@ -36,19 +36,23 @@ public class InspectorToolBuilder {
             }
             case TOGGLE_KINETICS -> {
                 mat = Material.DETECTOR_RAIL;
-                name = "<gray>Toggle Kinetics";
+                name = "<dark_green>Toggle Kinetics";
+            }
+            case TOGGLE_COLLISION -> {
+                mat = Material.LEVER;
+                name = "<dark_purple>Toggle Collision";
             }
             case VELOCITY_DIRECTION -> {
                 mat = Material.COMPASS;
-                name = "<red> Aim Velocity";
+                name = "<red>Aim Velocity";
             }
             case VELOCITY_SCALE -> {
                 mat = Material.CHAIN;
-                name = "<gray> Scale Velocity";
+                name = "<gray>Scale Velocity";
             }
             case ANGULAR_SCALE -> {
                 mat = Material.STONECUTTER;
-                name = "<gray> Angular Velocity Scale";
+                name = "<gray>Angular Velocity Scale";
             }
             case RESET -> {
                 mat = Material.WHITE_CONCRETE;

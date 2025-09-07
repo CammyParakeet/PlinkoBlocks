@@ -61,8 +61,9 @@ public class InspectorToolListener implements Listener {
                 manager.scaleObject(player, 0, scale, scale, scale);
             }
             case COLLIDE -> player.performCommand("inspect-collision collide");
-            case TOGGLE_CORNERS -> player.performCommand("inspect-collision toggle-corners");
-            case TOGGLE_KINETICS -> player.performCommand("inspect-collision toggle-kinematics");
+            case TOGGLE_CORNERS -> player.performCommand("inspect-collision graphics toggle-corners");
+            case TOGGLE_KINETICS -> player.performCommand("inspect-collision graphics toggle-kinematics");
+            case TOGGLE_COLLISION -> player.performCommand("inspect-collision graphics toggle-collision");
             case VELOCITY_DIRECTION -> player.performCommand("inspect-collision set-velocity-dir");
             case VELOCITY_SCALE -> {
                 float scale = event.getAction().isLeftClick() ? 1.1F : 0.9F;
