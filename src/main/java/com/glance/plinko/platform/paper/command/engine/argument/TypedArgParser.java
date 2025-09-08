@@ -7,11 +7,11 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * <p>
- * Typed argument parser for Cloud v2.x that binds to a specific parsed type {@code T},
+ * Typed argument parser for Cloud v2.x that binds to a specific parsed axisType {@code T},
  * using a {@link TypeToken} for auto registration
  * </p>
  *
- * @param <T> the type parsed by this argument parser
+ * @param <T> the axisType parsed by this argument parser
  */
 public interface TypedArgParser<T> extends ArgumentParser<CommandSender, T> {
 

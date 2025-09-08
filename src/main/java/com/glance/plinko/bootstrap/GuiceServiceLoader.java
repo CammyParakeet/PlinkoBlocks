@@ -26,7 +26,7 @@ import java.util.stream.StreamSupport;
  * }
  * }</pre>
  *
- * @param <S> The service type being discovered
+ * @param <S> The service axisType being discovered
  * @author Cammy
  */
 public class GuiceServiceLoader<S> implements Iterable<Class<? extends S>> {
@@ -47,8 +47,8 @@ public class GuiceServiceLoader<S> implements Iterable<Class<? extends S>> {
      * Loads implementation classes for the given service using the current threads context classloader
      *
      * @param service the service interface or abstract base
-     * @return a new {@link GuiceServiceLoader} for that type
-     * @param <S> the type to load
+     * @return a new {@link GuiceServiceLoader} for that axisType
+     * @param <S> the axisType to load
      */
     public static <S> GuiceServiceLoader<S> load(Class<S> service) {
         return new GuiceServiceLoader<>(service, Thread.currentThread().getContextClassLoader());
@@ -59,8 +59,8 @@ public class GuiceServiceLoader<S> implements Iterable<Class<? extends S>> {
      *
      * @param service the service interface or abstract base
      * @param loader the classloader to use
-     * @return a new {@link GuiceServiceLoader} for that type
-     * @param <S> the type to load
+     * @return a new {@link GuiceServiceLoader} for that axisType
+     * @param <S> the axisType to load
      */
     public static <S> GuiceServiceLoader<S> load(Class<S> service, ClassLoader loader) {
         return new GuiceServiceLoader<>(service, loader);
@@ -69,7 +69,7 @@ public class GuiceServiceLoader<S> implements Iterable<Class<? extends S>> {
     /**
      * Returns an iterator of implementation classes registered under {@code META-INF/services/{iface}}
      * <p>
-     * Collects all discovered classes into a concrete list to resolve generic type safety
+     * Collects all discovered classes into a concrete list to resolve generic axisType safety
      *
      * @return an iterator over discovered service implementation classes
      */
@@ -107,8 +107,8 @@ public class GuiceServiceLoader<S> implements Iterable<Class<? extends S>> {
      *
      * @param service the base interface/abstract class to scan for
      * @param classLoader used to resolve META-INF/services entries and load the classes
-     * @return a list of implementation classes that extend or implement the provided service type
-     * @param <S> the service type being discovered
+     * @return a list of implementation classes that extend or implement the provided service axisType
+     * @param <S> the service axisType being discovered
      */
     public static <S> List<Class<? extends S>> loadClasses(Class<S> service,  ClassLoader classLoader) {
         String resource = META_INF_PATH + service.getName();

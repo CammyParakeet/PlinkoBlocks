@@ -1,5 +1,7 @@
 package com.glance.plinko.platform.paper.physics.collision;
 
+import com.glance.plinko.platform.paper.physics.collision.manifold.Manifold;
+import com.glance.plinko.platform.paper.physics.collision.manifold.ManifoldHelper;
 import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +26,7 @@ public class PhysicsSeparatingAxis {
     private final class AxisMeta {
         Vector3f axis;
         float overlap;
-        CollisionResult.ContactTopology topology;
+        CollisionResult.AxisType axisType;
         int i;
         int j;
     }
@@ -53,17 +55,17 @@ public class PhysicsSeparatingAxis {
         List<AxisMeta> candidates = new ArrayList<>(MAX_SAT_AXES);
 
         for (int i = 0; i < 3; i++) candidates.add(faceAxis(axesA[i],
-                CollisionResult.ContactTopology.FACE_A, i, -1));
+                CollisionResult.AxisType.FACE_A, i, -1));
         for (int j = 0; j < 3; j++) candidates.add(faceAxis(axesB[j],
-                CollisionResult.ContactTopology.FACE_A, -1, j));
+                CollisionResult.AxisType.FACE_B, -1, j));
 
         // Cross product edge axes
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Vector3f cross = new Vector3f(axesA[i].cross(axesB[j]));
+                Vector3f cross = new Vector3f(axesA[i]).cross(axesB[j]);
                 if (cross.lengthSquared() > MIN_AXIS_LENGTH_SQUARED) {
                     candidates.add(faceAxis(cross.normalize(new Vector3f()),
-                            CollisionResult.ContactTopology.EDGE_EDGE, i, j));
+                            CollisionResult.AxisType.EDGE_CROSS, i, j));
                 }
             }
         }
@@ -87,7 +89,55 @@ public class PhysicsSeparatingAxis {
         Vector3f normal = new Vector3f(best.axis);
         if (d.dot(normal) < 0F) normal.negate(); // ensure pointing from A to B
 
-        // TODO manifold
+        CollisionResult.ContactTopology topology;
+        boolean refIsA;
+        int relFaceIdx;
+
+        switch (best.axisType) {
+            case FACE_A -> {
+                topology = CollisionResult.ContactTopology.FACE_FACE;
+                refIsA = true;
+                relFaceIdx = faceIndexFrom(normal, axesA);
+            }
+            case FACE_B -> {
+                topology = CollisionResult.ContactTopology.FACE_FACE;
+                refIsA = false;
+                relFaceIdx = faceIndexFrom(normal, axesB);
+            }
+            case EDGE_CROSS -> {
+                topology = CollisionResult.ContactTopology.EDGE_EDGE;
+                int ia = faceIndexFrom(normal, axesA);
+                int ib = faceIndexFrom(normal, axesB);
+                float alignA = Math.abs(normal.dot(axesA[ia]));
+                float alignB = Math.abs(normal.dot(axesB[ib]));
+                refIsA = alignA >= alignB;
+                relFaceIdx = refIsA ? ia : ib;
+            }
+            default -> throw new IllegalStateException("Unknown axis type");
+        }
+
+        Manifold manifold;
+        if (topology == CollisionResult.ContactTopology.FACE_FACE) {
+            manifold = ManifoldHelper.buildFaceFaceManifold(a, b, normal, refIsA, relFaceIdx);
+        } else {
+            // TODO
+            manifold = new Manifold();
+        }
+
+        int indexA = (best.axisType == CollisionResult.AxisType.FACE_A) ? relFaceIdx : best.i;
+        int indexB = (best.axisType == CollisionResult.AxisType.FACE_B) ? relFaceIdx : best.j;
+
+        return new CollisionResult(
+            normal.normalize(),
+            best.overlap,
+            best.axisType,
+            topology,
+            indexA,
+            indexB,
+            manifold.getPoints(),
+            manifold.getCentroid(),
+            b
+        );
     }
 
     /**
@@ -113,14 +163,24 @@ public class PhysicsSeparatingAxis {
         return projection;
     }
 
+    private int faceIndexFrom(Vector3f n, Vector3f[] axes) {
+        int idx = 0;
+        float best = -1f;
+        for (int i = 0; i < 3; i++) {
+            float d = Math.abs(n.dot(axes[i]));
+            if (d > best) { best = d; idx = i; }
+        }
+        return idx;
+    }
+
     private AxisMeta faceAxis(
         @NotNull Vector3f axis,
-        @NotNull CollisionResult.ContactTopology topology,
+        @NotNull CollisionResult.AxisType axisType,
         int i, int j
     ) {
         AxisMeta m = new AxisMeta();
         m.axis = new Vector3f(axis).normalize();
-        m.topology = topology;
+        m.axisType = axisType;
         m.i = i;
         m.j = j;
         return m;

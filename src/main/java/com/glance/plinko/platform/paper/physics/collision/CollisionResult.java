@@ -11,6 +11,7 @@ import java.util.List;
 public record CollisionResult(
    Vector3f normal,
    float penetrationDepth,
+   AxisType axisType,
    ContactTopology topology,
    int indexA,
    int indexB,
@@ -19,8 +20,12 @@ public record CollisionResult(
    PhysicsShape other
 ) {
 
+    public enum AxisType {
+        FACE_A, FACE_B, EDGE_CROSS
+    }
+
     public enum ContactTopology {
-        FACE_A, FACE_B, EDGE_EDGE
+        FACE_FACE, EDGE_EDGE
     }
 
 }
