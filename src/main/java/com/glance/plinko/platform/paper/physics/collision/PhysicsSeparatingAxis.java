@@ -2,8 +2,12 @@ package com.glance.plinko.platform.paper.physics.collision;
 
 import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3f;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 public class PhysicsSeparatingAxis {
@@ -16,6 +20,14 @@ public class PhysicsSeparatingAxis {
 
     // For center contact point fallback: move this multiple between centers
     private final float CONTACT_POINT_BLEND = 0.5F;
+
+    private final class AxisMeta {
+        Vector3f axis;
+        float overlap;
+        CollisionResult.ContactTopology topology;
+        int i;
+        int j;
+    }
 
     /**
      * Resolves collision between 2 oriented bounding boxes (OBBs)
@@ -36,51 +48,46 @@ public class PhysicsSeparatingAxis {
         // Vector between box centers A->B
         Vector3f d = new Vector3f(b.center()).sub(a.center());
 
-        float smallestOverlap = Float.POSITIVE_INFINITY;
-        Vector3f smallestAxis = null;
+        //float smallestOverlap = Float.POSITIVE_INFINITY;
+        AxisMeta best = null;
+        List<AxisMeta> candidates = new ArrayList<>(MAX_SAT_AXES);
 
-        // 3d has 15 axes to check SAT
-        Vector3f[] textAxes = new Vector3f[MAX_SAT_AXES];
-        System.arraycopy(axesA, 0, textAxes, 0, 3); // 3 from A
-        System.arraycopy(axesB, 0, textAxes, 3, 3); // 3 from B
+        for (int i = 0; i < 3; i++) candidates.add(faceAxis(axesA[i],
+                CollisionResult.ContactTopology.FACE_A, i, -1));
+        for (int j = 0; j < 3; j++) candidates.add(faceAxis(axesB[j],
+                CollisionResult.ContactTopology.FACE_A, -1, j));
 
-        // Compute 9 cross products between edges of A and B
-        int axisCount = 6;
+        // Cross product edge axes
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                Vector3f cross = new Vector3f(axesA[i]).cross(axesB[j]);
+                Vector3f cross = new Vector3f(axesA[i].cross(axesB[j]));
                 if (cross.lengthSquared() > MIN_AXIS_LENGTH_SQUARED) {
-                    textAxes[axisCount++] = cross.normalize(new Vector3f());
+                    candidates.add(faceAxis(cross.normalize(new Vector3f()),
+                            CollisionResult.ContactTopology.EDGE_EDGE, i, j));
                 }
             }
         }
 
-        // Now check all potential separating axis
-        for (int i = 0; i < axisCount; i++) {
-            Vector3f axis = textAxes[i];
+        // SAT test
+        for (AxisMeta m : candidates) {
+            float rA = projectOBB(a, m.axis);
+            float rB = projectOBB(b, m.axis);
+            float dist = Math.abs(d.dot(m.axis));
+            float overlap = (rA + rB) - dist;
 
-            float projectionA = projectOBB(a, axis);
-            float projectionB = projectOBB(b, axis);
-            float centerDistance = Math.abs(d.dot(axis));
+            if (!Float.isFinite(overlap)) continue;
+            if (overlap <= 0F) return null; // separated
+            m.overlap = overlap;
 
-            float overlap = (projectionA + projectionB) - centerDistance;
-
-            if (overlap <= 0) return null; // separation axis found with no collision
-
-            // Track axis with the smallest overlap (deepest penetration)
-            if (overlap < smallestOverlap) {
-                smallestOverlap = overlap;
-                smallestAxis = axis;
-            }
+            if (best == null || overlap < best.overlap) best = m;
         }
 
-        if (smallestAxis == null) return null;
+        if (best == null) return null;
 
-        // return basic collision result using the smallest overlap axis - TODO based on other factors
-        Vector3f contact = new Vector3f(a.center()).add(d.normalize().mul(CONTACT_POINT_BLEND));
-        Vector3f normal = new Vector3f(smallestAxis).normalize();
+        Vector3f normal = new Vector3f(best.axis);
+        if (d.dot(normal) < 0F) normal.negate(); // ensure pointing from A to B
 
-        return new CollisionResult(contact, normal, smallestOverlap, b);
+        // TODO manifold
     }
 
     /**
@@ -104,6 +111,19 @@ public class PhysicsSeparatingAxis {
         }
 
         return projection;
+    }
+
+    private AxisMeta faceAxis(
+        @NotNull Vector3f axis,
+        @NotNull CollisionResult.ContactTopology topology,
+        int i, int j
+    ) {
+        AxisMeta m = new AxisMeta();
+        m.axis = new Vector3f(axis).normalize();
+        m.topology = topology;
+        m.i = i;
+        m.j = j;
+        return m;
     }
 
 }
