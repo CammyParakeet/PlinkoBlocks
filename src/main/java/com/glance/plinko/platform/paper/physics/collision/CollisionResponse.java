@@ -31,7 +31,7 @@ public class CollisionResponse {
                 .mul(bounciness);
 
         // Find collision area relative to object center
-        Vector3f contactOffset = new Vector3f(result.contactPoint()).sub(object.getPosition());
+        Vector3f contactOffset = new Vector3f(result.centroid()).sub(object.getPosition());
 
         // Estimate strength of the hit based on speed and direction
         Vector3f impulse = new Vector3f(normal).mul(velocity.length());

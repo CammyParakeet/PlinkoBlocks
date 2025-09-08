@@ -36,6 +36,15 @@ public record DisplayOptions(
         );
     }
 
+    public static DisplayOptions marker(Material material, double scale) {
+        return new DisplayOptions(
+                Type.ITEM,
+                material,
+                new Vector(scale, scale, scale),
+                false
+        );
+    }
+
     public static DisplayOptions blockMarker(Material material) {
         return new DisplayOptions(
                 Type.BLOCK,

@@ -86,7 +86,7 @@ public class InspectSessionInfo {
             sb.append("CollisionResult:").append(nl);
             CollisionResult cr = session.getLastResult();
 
-            sb.append("  contact point: ").append(fmt(cr.contactPoint())).append(nl);
+            sb.append("  contact point: ").append(fmt(cr.centroid())).append(nl);
             try {
                 Vector3f n = safe(cr.normal());
                 float depth = cr.penetrationDepth();

@@ -50,7 +50,6 @@ public class PhysicsSeparatingAxis {
         // Vector between box centers A->B
         Vector3f d = new Vector3f(b.center()).sub(a.center());
 
-        //float smallestOverlap = Float.POSITIVE_INFINITY;
         AxisMeta best = null;
         List<AxisMeta> candidates = new ArrayList<>(MAX_SAT_AXES);
 
@@ -102,7 +101,7 @@ public class PhysicsSeparatingAxis {
             case FACE_B -> {
                 topology = CollisionResult.ContactTopology.FACE_FACE;
                 refIsA = false;
-                relFaceIdx = faceIndexFrom(normal, axesB);
+                relFaceIdx = faceIndexFrom(new Vector3f(normal).negate(), axesB);
             }
             case EDGE_CROSS -> {
                 topology = CollisionResult.ContactTopology.EDGE_EDGE;
@@ -120,8 +119,7 @@ public class PhysicsSeparatingAxis {
         if (topology == CollisionResult.ContactTopology.FACE_FACE) {
             manifold = ManifoldHelper.buildFaceFaceManifold(a, b, normal, refIsA, relFaceIdx);
         } else {
-            // TODO
-            manifold = new Manifold();
+            manifold = ManifoldHelper.buildEdgeEdgeManifold(a, b, best.i, best.j, normal);
         }
 
         int indexA = (best.axisType == CollisionResult.AxisType.FACE_A) ? relFaceIdx : best.i;
