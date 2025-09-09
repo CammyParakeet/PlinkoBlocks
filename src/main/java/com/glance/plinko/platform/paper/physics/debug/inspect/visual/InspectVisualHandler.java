@@ -101,38 +101,20 @@ public class InspectVisualHandler {
             if (obj == null) continue;
 
             if (!(obj.currentShape() instanceof OrientedBox box)) continue;
-
-            Quaternionf rotation = new Quaternionf().setFromNormalized(box.rotation());
             Vector3f center = box.center();
-            Vector3f[] axes = box.axes();
-            Vector3f halfSize = box.halfSize();
-            Vector3f scale = obj.getScale();
 
             Material mat = (i == 0) ? PRIMARY_CORNERS : SECONDARY_CORNERS;
-            DisplayOptions opts = new DisplayOptions(
-                    DisplayOptions.Type.ITEM,
-                    mat,
-                    new Vector(0.1, 0.1, 0.1),
-                    false
-            );
+            var opts = DisplayOptions.marker(mat, 0.05);
+            Quaternionf rotation = new Quaternionf().setFromNormalized(box.rotation());
 
-            for (int x = -1; x <= 1; x += 2) {
-                for (int y = -1; y <= 1; y += 2) {
-                    for (int z = -1; z <= 1; z += 2) {
-                        Vector3f offset = new Vector3f()
-                                .fma(x * halfSize.x * scale.x, axes[0])
-                                .fma(y * halfSize.y * scale.y, axes[1])
-                                .fma(z * halfSize.z * scale.z, axes[2]);
+            for (var corner : box.corners()) {
+                Vector3f worldPos = new Vector3f(corner);
+                Location loc = new Location(world, worldPos.x, worldPos.y, worldPos.z);
 
-                        Vector3f worldPos = new Vector3f(center).add(offset);
-                        Location loc = new Location(world, worldPos.x, worldPos.y, worldPos.z);
+                Display marker = DisplayUtils.spawnDisplay(loc, opts);
+                Transformer.modifyTransform(marker, false, t -> t.getLeftRotation().set(rotation));
 
-                        Display marker = DisplayUtils.spawnDisplay(loc, opts);
-                        Transformer.modifyTransform(marker, false, t -> t.getLeftRotation().set(rotation));
-
-                        add(InspectVisualType.SHAPE_CORNERS, marker);
-                    }
-                }
+                add(InspectVisualType.SHAPE_CORNERS, marker);
             }
 
             Location centerLoc = new Location(world, center.x, center.y, center.z);
@@ -140,12 +122,13 @@ public class InspectVisualHandler {
             DisplayOptions centerOpts = new DisplayOptions(
                     DisplayOptions.Type.ITEM,
                     centerMat,
-                    new Vector(0.15, 0.15, 0.15),
+                    new Vector(0.1, 0.1, 0.1),
+                    new Quaternionf(rotation),
                     false
             );
 
             Display centerMarker = DisplayUtils.spawnDisplay(centerLoc, centerOpts);
-            Transformer.modifyTransform(centerMarker, false, t -> t.getLeftRotation().set(rotation));
+
             add(InspectVisualType.SHAPE_CORNERS, centerMarker);
         }
     }
@@ -162,7 +145,17 @@ public class InspectVisualHandler {
         if (main == null || main.isImmovable()) return;
         if (!(main.currentShape() instanceof OrientedBox box)) return;
 
-        DebugCollisionVisuals.renderCollision(world, box, result, 1.0F, 1.0F, this);
+        DebugCollisionVisuals
+            .renderCollision(world, box, result, 1.0F, 1.0F, this);
+
+        Vector3f correction = DebugCollisionVisuals.computeCorrectionVector(result);
+        Vector3f corrected = new Vector3f(main.getPosition()).add(correction);
+        Location ghostLoc = new Location(world, corrected.x, corrected.y, corrected.z);
+
+        var ghostOpts = DisplayOptions.fromObject(Material.LIGHT_BLUE_STAINED_GLASS, main);
+        Display ghost = DisplayUtils.spawnDisplay(ghostLoc, ghostOpts);
+
+        add(InspectVisualType.COLLISION, ghost);
     }
 
     private void renderKinematics(

@@ -9,10 +9,22 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @UtilityClass
 public class ManifoldHelper {
+
+    final int[][] BOX_EDGES = {
+        {0,1},{0,2},{0,4},
+        {1,3},{1,5},
+        {2,3},{2,6},
+        {3,7},
+        {4,5},{4,6},
+        {5,7},
+        {6,7}
+    };
 
     private static final class FaceBasis {
         Vector3f center, u, v;  // orthonormal in-plane basis of the face
@@ -53,17 +65,18 @@ public class ManifoldHelper {
         // Reference face sits on +n side
         FaceBasis fb = buildFaceBasis(ref, faceIdx, nRef);
 
-        // Incident face sits on -n side
-        int incFaceIdx = mostAntiParallelFace(inc, nRef);
-        FaceBasis ib = buildFaceBasis(inc, incFaceIdx, new Vector3f(nRef).negate());
+        List<Vector3f> slice = sliceOBBWithPlane(inc, fb.center, nRef);
 
-        // Incident 3D quad
-        Vector3f[] incCorners = ib.rectangleCorners();
-        List<Vector2f> polyUV = new ArrayList<>(4);
-        for (Vector3f c : incCorners) polyUV.add(fb.toUV(c));
+        if (slice.size() < 3) {
+            int incFaceIdx = mostAntiParallelFace(inc, nRef);
+            FaceBasis ib = buildFaceBasis(inc, incFaceIdx, new Vector3f(nRef).negate());
+            slice = Arrays.asList(ib.rectangleCorners());
+        }
 
-        // Clip polygon to the reference rectangle
-        List<Vector2f> clipped = clipToRectangle(polyUV, fb.halfU, fb.halfV);
+        List<Vector2f> polyUV = new ArrayList<>(slice.size());
+        for (Vector3f p : slice) polyUV.add(fb.toUV(p));
+
+        List<Vector2f> clipped = clipToRectangle(orderConvex(polyUV), fb.halfU, fb.halfV);
 
         Manifold m = new Manifold();
         if (!clipped.isEmpty()) {
@@ -77,19 +90,77 @@ public class ManifoldHelper {
             return m;
         }
 
-//        Vector3f nRefLocal = ref.rotation().getColumn(faceIdx, new Vector3f());
-//        assert nRef.dot(nRefLocal) > 0f : "Reference face not aligned with nRef";
-//        Vector3f nIncLocal = inc.rotation().getColumn(incFaceIdx, new Vector3f());
-//        assert nRef.dot(nIncLocal) < 0f : "Incident face not anti-parallel to nRef";
-
-        // Fallback from rare degeneracy
-        Vector3f rel = new Vector3f(ib.center).sub(fb.center);
+        Vector3f incC = new Vector3f(inc.center());
+        Vector3f rel = incC.sub(fb.center, new Vector3f());
         float u = clamp(rel.dot(fb.u), -fb.halfU, fb.halfU);
         float v = clamp(rel.dot(fb.v), -fb.halfV, fb.halfV);
         Vector3f pt = fb.fromUV(new Vector2f(u, v));
         m.points.add(pt);
         m.centroid.set(pt);
         return m;
+    }
+
+    private List<Vector3f> sliceOBBWithPlane(
+        @NotNull OrientedBox box,
+        @NotNull Vector3f planePoint,
+        @NotNull Vector3f planeN
+    ) {
+        Vector3f[] corners = box.corners();
+
+        List<Vector3f> pts = new ArrayList<>(12);
+        float[] signedDistance = new float[8];
+        for (int i = 0; i < 8; i++) {
+            signedDistance[i] = new Vector3f(corners[i]).sub(planePoint).dot(planeN);
+        }
+
+        for (int[] e : BOX_EDGES) {
+            int i = e[0], j = e[1];
+            float di = signedDistance[i], dj = signedDistance[j];
+
+            Vector3f pi = corners[i];
+            Vector3f pj = corners[j];
+
+            boolean onI = Math.abs(di) <= VectorUtils.EPS;
+            boolean onJ = Math.abs(dj) <= VectorUtils.EPS;
+
+            if (onI && onJ) {
+                pts.add(new Vector3f(pi));
+                pts.add(new Vector3f(pj));
+            } else if (onI) {
+                pts.add(new Vector3f(pi));
+            } else if (onJ) {
+                pts.add(new Vector3f(pj));
+            } else if ((di > 0f && dj < 0f) || (di < 0f && dj > 0f)) {
+                float t = di / (di - dj);
+                Vector3f p = new Vector3f(pj).sub(pi).mul(t).add(pi);
+                pts.add(p);
+            }
+        }
+
+        return dedupe3D(pts);
+    }
+
+    private List<Vector3f> dedupe3D(List<Vector3f> in) {
+        List<Vector3f> out = new ArrayList<>(in.size());
+        final float epsSq = VectorUtils.EPS * VectorUtils.EPS;
+
+        for (Vector3f p : in) {
+            boolean unique = true;
+            for (Vector3f q : out) {
+                if (p.distanceSquared(q) <= epsSq) { unique = false; break; }
+            }
+            if (unique) out.add(p);
+        }
+        return out;
+    }
+
+    private List<Vector2f> orderConvex(List<Vector2f> poly) {
+        if (poly.size() <= 2) return poly;
+        Vector2f c = new Vector2f(0, 0);
+        for (Vector2f p : poly) c.add(p);
+        c.div((float) poly.size());
+        poly.sort(Comparator.comparingDouble(p -> Math.atan2(p.y - c.y, p.x - c.x)));
+        return poly;
     }
 
     /**

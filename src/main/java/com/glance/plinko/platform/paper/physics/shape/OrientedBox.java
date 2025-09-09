@@ -46,4 +46,26 @@ public record OrientedBox(
         };
     }
 
+    /** 8 world-space corners of an OBB. Index by bits: (sx, sy, sz) in {0,1} */
+    public Vector3f[] corners() {
+        Vector3f worldCenter = new Vector3f(center);
+
+        Vector3f axisX = rotation.getColumn(0, new Vector3f()).mul(halfSize.x * scale.x);
+        Vector3f axisY = rotation.getColumn(1, new Vector3f()).mul(halfSize.y * scale.y);
+        Vector3f axisZ = rotation.getColumn(2, new Vector3f()).mul(halfSize.z * scale.z);
+
+        Vector3f[] corners = new Vector3f[8];
+        int index = 0;
+
+        for (int signX = -1; signX <= 1; signX += 2)
+            for (int signY = -1; signY <= 1; signY += 2)
+                for (int signZ = -1; signZ <= 1; signZ += 2)
+                    corners[index++] = new Vector3f(worldCenter)
+                            .fma(signX, axisX)
+                            .fma(signY, axisY)
+                            .fma(signZ, axisZ);
+
+        return corners;
+    }
+
 }

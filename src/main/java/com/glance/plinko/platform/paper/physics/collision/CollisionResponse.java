@@ -12,6 +12,10 @@ public class CollisionResponse {
 
     // TODO: based on the object and/or collision object/peg?
     private final float ROTATION_BOOST = 0.1f;
+    private final float PENETRATION_SLOP = 0.001f;
+    private final float PENETRATION_CORRECT_PCT = 0.80f;
+
+    private final float FRICTION_COEFF = 0.0f;
 
     public void apply(
         @NotNull PlinkoObject object,

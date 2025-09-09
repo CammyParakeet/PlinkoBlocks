@@ -3,6 +3,7 @@ package com.glance.plinko.platform.paper.physics.debug.inspect;
 import com.glance.plinko.platform.paper.display.Transformer;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import com.glance.plinko.utils.lifecycle.Manager;
+import com.google.auto.service.AutoService;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.kyori.adventure.text.Component;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Slf4j
 @Singleton
+@AutoService(Manager.class)
 public class InspectorManager implements Manager {
 
     private final Map<UUID, InspectSession> sessions = new HashMap<>();
@@ -39,12 +41,9 @@ public class InspectorManager implements Manager {
 
     @Override
     public void onDisable() {
-        log.warn("Disabling Inspector Manager");
         this.sessions.forEach((id, s) -> {
-            log.warn("Disabling session for {}", id);
             @Nullable Player p = Bukkit.getPlayer(id);
             if (p != null) {
-                log.warn("Clearing player inv? {}", p.getName());
                 // todo restore
                 p.getInventory().clear();
             }
