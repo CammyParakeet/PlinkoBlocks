@@ -6,6 +6,8 @@ import com.glance.plinko.platform.paper.display.Transformer;
 import com.glance.plinko.platform.paper.display.debug.ArcGizmo;
 import com.glance.plinko.platform.paper.display.debug.LineDisplays;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResponder;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResponse;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
 import com.glance.plinko.platform.paper.physics.debug.inspect.InspectSession;
 import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
@@ -149,8 +151,48 @@ public class InspectVisualHandler {
         DebugCollisionVisuals
             .renderCollision(world, box, result, 1.0F, 1.0F, this);
 
-        Vector3f correction = DebugCollisionVisuals.computeCorrectionVector(result);
-        Vector3f corrected = new Vector3f(main.getPosition()).add(correction);
+        CollisionResponse response = CollisionResponder.planResponseLite(main, result);
+
+        Vector3f pos = box.center();
+        Location start = new Location(world, pos.x, pos.y, pos.z);
+        log.warn("Linear Delta: {}", response.linearVelocityDelta());
+        var velocity = new Vector3f(main.getVelocity()).add(response.linearVelocityDelta());
+        if (velocity.length() > 1e-5) {
+            var arrow = LineDisplays.spawnDebugArrow(start, Vector.fromJOML(velocity), velocity.length(),
+                    0.01f, Material.RED_CONCRETE);
+            add(InspectVisualType.COLLISION, arrow.body());
+            add(InspectVisualType.COLLISION, arrow.tip());
+        } else {
+            log.warn("Not doing linear as it's {}", velocity);
+        }
+
+        log.warn("Angular Delta: {}", response.angularVelocityDelta());
+        var angularVel = new Vector3f(main.getAngularVelocity()).add(response.angularVelocityDelta());
+        if (angularVel.length() > 1e-5) {
+            var arc = ArcGizmo.renderAngularArc(
+                    world,
+                    new Vector3f(pos),
+                    new Vector3f(angularVel),
+                    0.25,
+                    0.35,
+                    Math.PI * 1.75,
+                    16,
+                    0.0145F,
+                    Material.RED_CONCRETE
+            );
+
+            if (arc.getTip() != null) {
+                add(InspectVisualType.COLLISION, arc.getTip().tip());
+                add(InspectVisualType.COLLISION, arc.getTip().body());
+            }
+
+            arc.getSegments().forEach(d -> add(InspectVisualType.COLLISION, d));
+        } else {
+            log.warn("Not doing angular as it's {}", angularVel);
+        }
+
+        //Vector3f correction = DebugCollisionVisuals.computeCorrectionVector(result);
+        Vector3f corrected = new Vector3f(main.getPosition()).add(response.correction());
         Location ghostLoc = new Location(world, corrected.x, corrected.y, corrected.z);
 
         var ghostOpts = DisplayOptions.fromObject(Material.LIGHT_BLUE_STAINED_GLASS, main);
@@ -174,7 +216,8 @@ public class InspectVisualHandler {
             Vector3f pos = box.center();
             Vector3f velocity = obj.getVelocity();
             Vector3f angular = obj.getAngularVelocity();
-            Vector3f angularVel = new Vector3f(2.5f, 15.0f, -1.0f);
+            Vector3f angularVel = new Vector3f(2.25f, 3.5f, -1.1f);
+            obj.setAngularVelocity(angularVel);
 
             Location start = new Location(world, pos.x, pos.y, pos.z);
 
@@ -196,7 +239,7 @@ public class InspectVisualHandler {
                     Math.PI * 1.75,
                     16,
                     0.02F,
-                        Material.GREEN_CONCRETE
+                        Material.LIME_CONCRETE
                 );
 
                 if (arc.getTip() != null) {

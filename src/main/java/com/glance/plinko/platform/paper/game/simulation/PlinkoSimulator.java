@@ -2,7 +2,7 @@ package com.glance.plinko.platform.paper.game.simulation;
 
 import com.glance.plinko.platform.paper.animation.PlinkoAnimation;
 import com.glance.plinko.platform.paper.animation.PlinkoKeyframe;
-import com.glance.plinko.platform.paper.physics.collision.CollisionResponse;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResponder;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
 import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
 import com.glance.plinko.utils.lifecycle.Manager;
@@ -70,7 +70,7 @@ public class PlinkoSimulator implements Manager {
 
                 CollisionResult result = shape.collide(obstacle);
                 if (result != null) {
-                    CollisionResponse.apply(object, result, ctx.debug());
+                    CollisionResponder.apply(object, result, ctx.debug());
                     collisionOccurred = true;
                     break;
                 }

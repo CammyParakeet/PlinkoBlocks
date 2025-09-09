@@ -34,6 +34,10 @@ public class PlinkoObject {
 
     private final PhysicsShape baseShape;
 
+    // Cached dynamics
+    private float invMass;
+    private float invInertia;
+
     @Inject
     public PlinkoObject(
         @Assisted PlinkoRunContext context,
@@ -64,6 +68,8 @@ public class PlinkoObject {
         this.bounciness = 0.6F;
         this.angularVelocity = new Vector3f();
         this.scale = new Vector3f(1.0F, 1.0F, 1.0F);
+
+        recomputeMassProperties();
     }
 
     public PhysicsShape currentShape() {
@@ -79,6 +85,29 @@ public class PlinkoObject {
         Vector3f r = new Vector3f(worldPoint).sub(position);
         Vector3f spinVelocity = new Vector3f(angularVelocity).cross(r);
         return new Vector3f(velocity).add(spinVelocity);
+    }
+
+    private void recomputeMassProperties() {
+        if (immovable) {
+            this.invInertia = 0f;
+            this.invMass = 0f;
+            return;
+        }
+
+        this.invMass = (mass <= 0f ? 0f : 1f / mass);
+
+        float R = 0.5f;
+        if (baseShape instanceof OrientedBox box) {
+            Vector3f half = new Vector3f(box.halfSize()).mul(scale);
+            R = (float) Math.sqrt(half.x * half.x + half.y * half.y + half.z * half.z);
+        }
+
+        if (R < 1e-4f) {
+            this.invInertia = 0f;
+        } else {
+            // sphere inertia approx
+            this.invInertia = (5f / 2f) * this.invMass / (R * R);
+        }
     }
 
 }
