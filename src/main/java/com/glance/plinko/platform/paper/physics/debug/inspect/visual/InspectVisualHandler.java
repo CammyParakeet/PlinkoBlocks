@@ -3,6 +3,7 @@ package com.glance.plinko.platform.paper.physics.debug.inspect.visual;
 import com.glance.plinko.platform.paper.display.DisplayOptions;
 import com.glance.plinko.platform.paper.display.DisplayUtils;
 import com.glance.plinko.platform.paper.display.Transformer;
+import com.glance.plinko.platform.paper.display.debug.ArcGizmo;
 import com.glance.plinko.platform.paper.display.debug.LineDisplays;
 import com.glance.plinko.platform.paper.game.simulation.PlinkoObject;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
@@ -173,6 +174,7 @@ public class InspectVisualHandler {
             Vector3f pos = box.center();
             Vector3f velocity = obj.getVelocity();
             Vector3f angular = obj.getAngularVelocity();
+            Vector3f angularVel = new Vector3f(2.5f, 15.0f, -1.0f);
 
             Location start = new Location(world, pos.x, pos.y, pos.z);
 
@@ -184,11 +186,26 @@ public class InspectVisualHandler {
                 log.warn("Toggled kinematics but object had no velocity");
             }
 
-//          TODO later
-//            if (angular.length() > 1e-5) {
-//                // todo angular arrow
-//                add(InspectVisualType.KINEMATICS, );
-//            }
+            if (angularVel.length() > 1e-5) {
+                var arc = ArcGizmo.renderAngularArc(
+                    world,
+                    new Vector3f(pos),
+                    new Vector3f(angularVel),
+                    0.3,
+                    0.35,
+                    Math.PI * 1.75,
+                    16,
+                    0.02F,
+                        Material.GREEN_CONCRETE
+                );
+
+                if (arc.getTip() != null) {
+                    add(InspectVisualType.KINEMATICS, arc.getTip().tip());
+                    add(InspectVisualType.KINEMATICS, arc.getTip().body());
+                }
+
+                arc.getSegments().forEach(d -> add(InspectVisualType.KINEMATICS, d));
+            }
         }
     }
 
