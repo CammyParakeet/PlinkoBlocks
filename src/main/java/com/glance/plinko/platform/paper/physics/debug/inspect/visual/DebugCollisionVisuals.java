@@ -4,7 +4,9 @@ import com.glance.plinko.platform.paper.display.DisplayOptions;
 import com.glance.plinko.platform.paper.display.DisplayUtils;
 import com.glance.plinko.platform.paper.display.debug.DebugArrow;
 import com.glance.plinko.platform.paper.display.debug.LineDisplays;
+import com.glance.plinko.platform.paper.physics.collision.CollisionResponder;
 import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
+import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import com.glance.plinko.platform.paper.physics.shape.PhysicsShape;
 import com.glance.plinko.platform.paper.utils.math.VectorUtils;
 import lombok.experimental.UtilityClass;
@@ -21,7 +23,7 @@ import org.joml.Vector3f;
 @UtilityClass
 public class DebugCollisionVisuals {
 
-    private final double NORMAL_LEN = 0.25;
+    private final double NORMAL_LEN = 0.1;
     private final double MTV_LEN_SCALE = 1.0;
     private final double VEL_PREVIEW_SCALE = 0.4;
     private final float PENETRATION_SLOP = 0.001f;
@@ -31,31 +33,45 @@ public class DebugCollisionVisuals {
         @NotNull World world,
         @NotNull PhysicsShape primary,
         @NotNull CollisionResult result,
+        @NotNull Vector3f orientedNormal,
         float restitution,
         float tangentialDamp,
         @NotNull InspectVisualHandler h
     ) {
-        Vector3f normal = new Vector3f(result.normal());
-        Vector3f normalFlipped = new Vector3f(normal).negate();
-        if (normal.lengthSquared() <= VectorUtils.EPS) return;
-        normal.normalize();
+//        Vector3f normal = new Vector3f(result.normal());
+//        Vector3f normalFlipped = new Vector3f(normal).negate();
+//        if (normal.lengthSquared() <= VectorUtils.EPS) return;
+//        normal.normalize();
 
-        Vector3f c3 = new Vector3f(result.centroid());
-        Location centroid = new Location(world, c3.x, c3.y, c3.z);
+        Vector3f centroidVec = new Vector3f(result.centroid());
+        Location centroidLoc = new Location(world, centroidVec.x, centroidVec.y, centroidVec.z);
 
-        var centroidMarker = DisplayUtils.spawnDisplay(centroid, DisplayOptions.marker(Material.SHROOMLIGHT));
+        var centroidMarker = DisplayUtils.spawnDisplay(centroidLoc,
+                DisplayOptions.marker(Material.BLACKSTONE, 0.02));
         add(h, centroidMarker);
+        log.warn("Centroid: {}", centroidVec);
 
-        Vector normalDir = Vector.fromJOML(normalFlipped);
-        var normalArrow = LineDisplays.spawnDebugArrow(centroid, normalDir, NORMAL_LEN, 0.03f, Material.ORANGE_CONCRETE_POWDER);
+        if (primary instanceof OrientedBox obb) {
+            var contact = CollisionResponder.surfaceContactPoint(obb, centroidVec, orientedNormal);
+            log.warn("Contact Pt: {}", contact);
+            Location contactLoc = new Location(world, contact.x, contact.y, contact.z);
+            var contactMarker = DisplayUtils.spawnDisplay(contactLoc,
+                    DisplayOptions.marker(Material.SHROOMLIGHT, 0.025));
+            add(h, contactMarker);
+        }
+
+        Vector normalDir = Vector.fromJOML(orientedNormal);
+        var normalArrow = LineDisplays.spawnDebugArrow(centroidLoc, normalDir, NORMAL_LEN,
+                0.01f, Material.SAND);
         addLine(h, normalArrow);
 
         // Minimum translation vector
-        Vector mtvDir = Vector.fromJOML(normalFlipped).normalize();
+        Vector mtvDir = Vector.fromJOML(orientedNormal).normalize();
         double mtvLen = Math.max(0.0, result.penetrationDepth()) * MTV_LEN_SCALE;
         if (mtvLen > 0.0) {
-            Location start = centroid.clone().subtract(mtvDir.clone().multiply(mtvLen));
-            var mtvArrow = LineDisplays.spawnDebugArrow(start, mtvDir, mtvLen, 0.02f, Material.RED_CONCRETE);
+            Location start = centroidLoc.clone().subtract(mtvDir.clone().multiply(mtvLen));
+            var mtvArrow = LineDisplays.spawnDebugArrow(start, mtvDir, mtvLen, 0.015f,
+                    Material.ORANGE_CONCRETE);
             addLine(h, mtvArrow);
         }
 
@@ -63,7 +79,7 @@ public class DebugCollisionVisuals {
         if (pts != null && !pts.isEmpty()) {
             for (Vector3f p : pts) {
                 Location lp = new Location(world, p.x, p.y, p.z);
-                var vtx = DisplayUtils.spawnDisplay(lp, DisplayOptions.marker(Material.RED_CONCRETE, 0.04));
+                var vtx = DisplayUtils.spawnDisplay(lp, DisplayOptions.marker(Material.RED_CONCRETE, 0.05));
                 add(h, vtx);
             }
 

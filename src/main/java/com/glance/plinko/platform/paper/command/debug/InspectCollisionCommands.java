@@ -106,13 +106,18 @@ public class InspectCollisionCommands implements CommandHandler {
         inv.setItem(1, InspectorToolBuilder.buildTool(InspectorToolType.ROTATE));
         inv.setItem(2, InspectorToolBuilder.buildTool(InspectorToolType.SCALE));
         inv.setItem(3, InspectorToolBuilder.buildTool(InspectorToolType.COLLIDE));
-        inv.setItem(4, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_CORNERS));
-        inv.setItem(5, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_KINETICS));
-        inv.setItem(6, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_DIRECTION));
-        inv.setItem(33, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_SCALE));
-        inv.setItem(34, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_COLLISION));
-        inv.setItem(7, InspectorToolBuilder.buildTool(InspectorToolType.RESET));
+        inv.setItem(4, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_COLLISION));
+        inv.setItem(5, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_CORNERS));
+        inv.setItem(6, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_KINETICS));
+        inv.setItem(7, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_DIRECTION));
         inv.setItem(8, InspectorToolBuilder.buildTool(InspectorToolType.EXIT));
+
+        inv.setItem(28, InspectorToolBuilder.buildTool(InspectorToolType.ANIMATE_CURRENT_SPIN));
+        inv.setItem(29, InspectorToolBuilder.buildTool(InspectorToolType.ANIMATE_COLLISION_SPIN));
+
+        inv.setItem(30, InspectorToolBuilder.buildTool(InspectorToolType.TOGGLE_SHAPE));
+        inv.setItem(31, InspectorToolBuilder.buildTool(InspectorToolType.VELOCITY_SCALE));
+        inv.setItem(35, InspectorToolBuilder.buildTool(InspectorToolType.RESET));
     }
 
     // todo realtime collision result setup
@@ -181,25 +186,40 @@ public class InspectCollisionCommands implements CommandHandler {
         inspectorManager.scaleObject(player, slot, x, y, z);
     }
 
+    @Command("inspect-collision graphics toggle-shapes")
+    public void toggleShapeDisplayGraphics(@NotNull Player player) {
+        InspectSession session = inspectorManager.getOrCreate(player);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.SHAPE);
+    }
+
     @Command("inspect-collision graphics toggle-corners")
     public void toggleCornerGraphics(@NotNull Player player) {
         InspectSession session = inspectorManager.getOrCreate(player);
-        session.getVisualHandler().toggle(
-                player, InspectVisualHandler.InspectVisualType.SHAPE_CORNERS, session);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.SHAPE_CORNERS);
     }
 
     @Command("inspect-collision graphics toggle-kinematics")
     public void toggleKinematicGraphics(@NotNull Player player) {
         @NotNull InspectSession session = inspectorManager.getOrCreate(player);
-        session.getVisualHandler().toggle(
-                player, InspectVisualHandler.InspectVisualType.KINEMATICS, session);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.KINEMATICS);
     }
 
     @Command("inspect-collision graphics toggle-collision")
     public void toggleCollisionGraphics(@NotNull Player player) {
         @NotNull InspectSession session = inspectorManager.getOrCreate(player);
-        session.getVisualHandler().toggle(
-                player, InspectVisualHandler.InspectVisualType.COLLISION, session);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.COLLISION);
+    }
+
+    @Command("inspect-collision graphics toggle-current-spin")
+    public void toggleAnimateCurrentSpin(@NotNull Player player) {
+        @NotNull InspectSession session = inspectorManager.getOrCreate(player);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.CURRENT_SPIN);
+    }
+
+    @Command("inspect-collision graphics toggle-collision-spin")
+    public void toggleAnimateCollisionSpin(@NotNull Player player) {
+        @NotNull InspectSession session = inspectorManager.getOrCreate(player);
+        session.getVisualHandler().toggle(InspectVisualHandler.InspectVisualType.POST_SPIN);
     }
 
     @Command("inspect-collision set-velocity-dir")

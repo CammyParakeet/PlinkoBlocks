@@ -65,7 +65,7 @@ public class PlinkoObject {
         this.position = new Vector3f(baseShape.center());
         this.velocity = new Vector3f();
         this.rotation = new Quaternionf();
-        this.bounciness = 0.6F;
+        this.bounciness = 1.1F;
         this.angularVelocity = new Vector3f();
         this.scale = new Vector3f(1.0F, 1.0F, 1.0F);
 

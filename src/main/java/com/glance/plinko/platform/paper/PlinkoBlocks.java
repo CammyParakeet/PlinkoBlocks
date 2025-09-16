@@ -30,4 +30,8 @@ public class PlinkoBlocks extends JavaPlugin {
         PaperComponentScanner.scanAndCleanup(this, this.injector);
     }
 
+    public static PlinkoBlocks instance() {
+        return getPlugin(PlinkoBlocks.class);
+    }
+
 }

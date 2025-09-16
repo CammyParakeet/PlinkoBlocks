@@ -30,6 +30,10 @@ public class InspectorToolBuilder {
                 mat = Material.TNT;
                 name = "<yellow>Collision";
             }
+            case TOGGLE_SHAPE -> {
+                mat = Material.BLUE_STAINED_GLASS;
+                name = "<blue>Toggle Shape Display";
+            }
             case TOGGLE_CORNERS -> {
                 mat = Material.ENDER_EYE;
                 name = "<aqua>Toggle Corners";
@@ -53,6 +57,14 @@ public class InspectorToolBuilder {
             case ANGULAR_SCALE -> {
                 mat = Material.STONECUTTER;
                 name = "<gray>Angular Velocity Scale";
+            }
+            case ANIMATE_CURRENT_SPIN -> {
+                mat = Material.ENDER_PEARL;
+                name = "Animate Initial/Current Rot";
+            }
+            case ANIMATE_COLLISION_SPIN -> {
+                mat = Material.ENDER_EYE;
+                name = "Animate Collision/Post Rot";
             }
             case RESET -> {
                 mat = Material.WHITE_CONCRETE;

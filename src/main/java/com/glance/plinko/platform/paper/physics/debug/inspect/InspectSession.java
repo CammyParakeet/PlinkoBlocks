@@ -20,15 +20,23 @@ public class InspectSession {
     private final VelocityState[] angular = new VelocityState[] { new VelocityState(), new VelocityState() };
 
     @Getter
-    private final InspectVisualHandler visualHandler = new InspectVisualHandler();
+    private final InspectVisualHandler visualHandler;
 
     @Getter
     @Setter
     private CollisionResult lastResult;
 
+    public InspectSession(@NotNull Player player) {
+        this.visualHandler = new InspectVisualHandler(player, this);
+    }
+
     public void set(int index, PlinkoObject object, Display display) {
         this.objects[index] = object;
         this.displays[index] = display;
+
+        if (display != null) {
+            this.visualHandler.add(InspectVisualHandler.InspectVisualType.SHAPE, display);
+        }
 
         if (object != null) {
             // Sync linear state
@@ -68,7 +76,7 @@ public class InspectSession {
     }
 
     public void updateVisuals(@NotNull Player player) {
-        this.visualHandler.update(player, this);
+        this.visualHandler.update();
     }
 
     public void clearVisuals() {

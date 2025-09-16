@@ -17,6 +17,7 @@ public enum InspectorToolType {
     ROTATE,
     SCALE,
     COLLIDE,
+    TOGGLE_SHAPE,
     TOGGLE_CORNERS,
     TOGGLE_KINETICS,
     TOGGLE_COLLISION,
@@ -24,6 +25,8 @@ public enum InspectorToolType {
     VELOCITY_SCALE,
     ANGULAR_DIRECTION,
     ANGULAR_SCALE,
+    ANIMATE_CURRENT_SPIN,
+    ANIMATE_COLLISION_SPIN,
     RESET,
     EXIT;
 

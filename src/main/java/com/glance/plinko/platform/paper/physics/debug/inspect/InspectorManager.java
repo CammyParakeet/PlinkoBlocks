@@ -29,7 +29,7 @@ public class InspectorManager implements Manager {
     private final Map<UUID, InspectSession> sessions = new HashMap<>();
 
     public InspectSession getOrCreate(@NotNull Player player) {
-        return sessions.computeIfAbsent(player.getUniqueId(), uuid -> new InspectSession());
+        return sessions.computeIfAbsent(player.getUniqueId(), uuid -> new InspectSession(player));
     }
 
     public void clear(@NotNull Player player) {
@@ -79,7 +79,7 @@ public class InspectorManager implements Manager {
         }
 
         Transformer.renderAt(display, Vector.fromJOML(pos));
-        session.getVisualHandler().update(player, session);
+        session.getVisualHandler().update();
     }
 
     public void rotateObject(
@@ -111,7 +111,7 @@ public class InspectorManager implements Manager {
 
         obj.getRotation().mul(rotation);
         Transformer.modifyTransform(display, true, t -> t.getLeftRotation().set(obj.getRotation()));
-        session.getVisualHandler().update(player, session);
+        session.getVisualHandler().update();
     }
 
     public void scaleObject(
@@ -132,7 +132,7 @@ public class InspectorManager implements Manager {
 
         obj.setScale(new Vector3f(x, y, z).mul(obj.getScale()));
         Transformer.modifyTransform(display, true, t -> t.getScale().mul(x, y, z));
-        session.getVisualHandler().update(player, session);
+        session.getVisualHandler().update();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.glance.plinko.platform.paper.physics.debug.inspect.visual;
 
+import com.glance.plinko.platform.paper.PlinkoBlocks;
 import com.glance.plinko.platform.paper.display.DisplayOptions;
 import com.glance.plinko.platform.paper.display.DisplayUtils;
 import com.glance.plinko.platform.paper.display.Transformer;
@@ -12,11 +13,13 @@ import com.glance.plinko.platform.paper.physics.collision.CollisionResult;
 import com.glance.plinko.platform.paper.physics.debug.inspect.InspectSession;
 import com.glance.plinko.platform.paper.physics.shape.OrientedBox;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
@@ -29,22 +32,48 @@ import java.util.List;
 @Slf4j
 public class InspectVisualHandler {
 
+    private final Player player;
+    private final InspectSession session;
+
     private final EnumMap<InspectVisualType, Boolean> visibilityFlags = new EnumMap<>(InspectVisualType.class);
     private final EnumMap<InspectVisualType, List<Display>> visuals = new EnumMap<>(InspectVisualType.class);
+
+    private final DebugSpinController currentSpin = new DebugSpinController();
+    private final DebugSpinController postImpactSpin = new DebugSpinController();
 
     private static final Material PRIMARY_CORNERS = Material.WHITE_CONCRETE;
     private static final Material SECONDARY_CORNERS = Material.BLACK_CONCRETE;
 
+    private BukkitTask updateTask;
+
     public enum InspectVisualType {
+        SHAPE,
         SHAPE_CORNERS,
         COLLISION,
-        KINEMATICS
+        KINEMATICS,
+        CURRENT_SPIN,
+        POST_SPIN
     }
 
-    public InspectVisualHandler() {
+    public InspectVisualHandler(
+        @NotNull Player player,
+        @NotNull InspectSession session
+    ) {
+        this.player = player;
+        this.session = session;
+
         for (InspectVisualType type : InspectVisualType.values()) {
             visibilityFlags.put(type, false);
             visuals.put(type, new ArrayList<>());
+        }
+
+        if (updateTask == null) {
+            updateTask = Bukkit.getScheduler().runTaskTimerAsynchronously(
+                PlinkoBlocks.instance(),
+                this::updateTick,
+                1L,
+                1L
+            );
         }
     }
 
@@ -55,48 +84,100 @@ public class InspectVisualHandler {
         visuals.get(type).add(display);
     }
 
-    public void toggle(
-        @NotNull Player player,
-        @NotNull InspectVisualType type,
-        @NotNull InspectSession session
-    ) {
+    public void toggle(@NotNull InspectVisualType type) {
         boolean nowEnabled = !visibilityFlags.getOrDefault(type, false);
         visibilityFlags.put(type, nowEnabled);
 
+        if (type == InspectVisualType.SHAPE) {
+            toggleHideShapes(nowEnabled);
+            return;
+        }
+
+        if (type == InspectVisualType.POST_SPIN) {
+            toggleSpin(true, !nowEnabled);
+            return;
+        }
+        if (type == InspectVisualType.CURRENT_SPIN) {
+            toggleSpin(false, !nowEnabled);
+            return;
+        }
+
         if (nowEnabled) {
-            render(player, type, session);
+            render(type);
         } else {
             clear(type);
         }
     }
 
-    public void update(
-        @NotNull Player player,
-        @NotNull InspectSession session
-    ) {
+    public void update() {
         for (InspectVisualType type : InspectVisualType.values()) {
             if (isEnabled(type)) {
-                render(player, type, session);
+                render(type);
             }
         }
     }
 
+    public void updateTick() {
+        this.currentSpin.update();
+        this.postImpactSpin.update();
+    }
+
     public void render(
-        @NotNull Player player,
-        @NotNull InspectVisualType type,
-        @NotNull InspectSession session
+        @NotNull InspectVisualType type
     ) {
         switch (type) {
-            case SHAPE_CORNERS -> renderCorners(player.getWorld(), session);
-            case COLLISION -> renderCollision(player.getWorld(), session);
-            case KINEMATICS -> renderKinematics(player.getWorld(), session);
+            case SHAPE_CORNERS -> renderCorners(player.getWorld());
+            case COLLISION -> renderCollision(player.getWorld());
+            case KINEMATICS -> renderKinematics(player.getWorld());
         }
     }
 
-    private void renderCorners(
-        @NotNull World world,
-        @NotNull InspectSession session
-    ) {
+    private void toggleSpin(boolean useCollided, boolean enabled) {
+        Display d = this.session.getDisplay(0);
+        if (d == null) return;
+
+        if (useCollided) {
+            PlinkoObject obj = this.session.getObject(0);
+            if (obj == null) return;
+            CollisionResult latest = session.getLastResult();
+            if (latest == null) return;
+
+            CollisionResponse response = CollisionResponder.planResponseLite(obj, latest);
+
+            Vector3f omega = new Vector3f(obj.getAngularVelocity()).add(response.angularVelocityDelta());
+            log.warn("Toggling post spin - omega: {}", omega);
+            this.postImpactSpin.toggle(d, omega, enabled);
+        } else {
+            PlinkoObject obj = this.session.getObject(0);
+            if (obj == null) return;
+            Vector3f omega = obj.getAngularVelocity();
+            log.warn("Toggling pre spin - omega: {}", omega);
+            this.currentSpin.toggle(d, omega, enabled);
+        }
+    }
+
+    private void toggleHideShapes(boolean enabled) {
+        if (!isEnabled(InspectVisualType.SHAPE_CORNERS)) {
+            player.sendMessage("Can't hide shape with no corners visible");
+            return;
+        }
+
+        for (int i = 0; i < 2; i++) {
+            PlinkoObject obj = session.getObject(i);
+            if (obj == null) continue;
+
+            Display objDisplay = session.getDisplay(i);
+            if (objDisplay == null) return;
+
+            if (enabled) {
+                player.hideEntity(PlinkoBlocks.instance(), objDisplay);
+            } else {
+                player.showEntity(PlinkoBlocks.instance(), objDisplay);
+            }
+        }
+    }
+
+    private void renderCorners(@NotNull World world) {
         clear(InspectVisualType.SHAPE_CORNERS);
 
         for (int i = 0; i < 2; i++) {
@@ -125,7 +206,7 @@ public class InspectVisualHandler {
             DisplayOptions centerOpts = new DisplayOptions(
                     DisplayOptions.Type.ITEM,
                     centerMat,
-                    new Vector(0.1, 0.1, 0.1),
+                    new Vector(0.05, 0.05, 0.05),
                     new Quaternionf(rotation),
                     false
             );
@@ -136,10 +217,7 @@ public class InspectVisualHandler {
         }
     }
 
-    private void renderCollision(
-        @NotNull World world,
-        @NotNull InspectSession session
-    ) {
+    private void renderCollision(@NotNull World world) {
         clear(InspectVisualType.COLLISION);
         CollisionResult result = session.getLastResult();
         if (result == null) return;
@@ -148,15 +226,21 @@ public class InspectVisualHandler {
         if (main == null || main.isImmovable()) return;
         if (!(main.currentShape() instanceof OrientedBox box)) return;
 
+        Vector3f orientedNormal = CollisionResponder.orientedNormalForPrimary(main, result).normalize();
         DebugCollisionVisuals
-            .renderCollision(world, box, result, 1.0F, 1.0F, this);
+            .renderCollision(world, box, result, orientedNormal,1.0F, 1.0F, this);
 
         CollisionResponse response = CollisionResponder.planResponseLite(main, result);
 
         Vector3f pos = box.center();
         Location start = new Location(world, pos.x, pos.y, pos.z);
-        log.warn("Linear Delta: {}", response.linearVelocityDelta());
+
         var velocity = new Vector3f(main.getVelocity()).add(response.linearVelocityDelta());
+        log.warn("Linear | Before: '{}' - Delta: '{}' - After: '{}'",
+                main.getVelocity(),
+                response.linearVelocityDelta(),
+                velocity
+        );
         if (velocity.length() > 1e-5) {
             var arrow = LineDisplays.spawnDebugArrow(start, Vector.fromJOML(velocity), velocity.length(),
                     0.01f, Material.RED_CONCRETE);
@@ -166,15 +250,19 @@ public class InspectVisualHandler {
             log.warn("Not doing linear as it's {}", velocity);
         }
 
-        log.warn("Angular Delta: {}", response.angularVelocityDelta());
         var angularVel = new Vector3f(main.getAngularVelocity()).add(response.angularVelocityDelta());
+        log.warn("Angular | Before: '{}' - Delta: '{}' - After '{}'",
+                main.getAngularVelocity(),
+                response.angularVelocityDelta(),
+                angularVel
+        );
         if (angularVel.length() > 1e-5) {
             var arc = ArcGizmo.renderAngularArc(
                     world,
                     new Vector3f(pos),
                     new Vector3f(angularVel),
                     0.25,
-                    0.35,
+                    0.75,
                     Math.PI * 1.75,
                     16,
                     0.0145F,
@@ -201,10 +289,7 @@ public class InspectVisualHandler {
         add(InspectVisualType.COLLISION, ghost);
     }
 
-    private void renderKinematics(
-        @NotNull World world,
-        @NotNull InspectSession session
-    ) {
+    private void renderKinematics(@NotNull World world) {
         clear(InspectVisualType.KINEMATICS);
 
         for (int i = 0; i < 2; i++) {
@@ -216,13 +301,14 @@ public class InspectVisualHandler {
             Vector3f pos = box.center();
             Vector3f velocity = obj.getVelocity();
             Vector3f angular = obj.getAngularVelocity();
-            Vector3f angularVel = new Vector3f(2.25f, 3.5f, -1.1f);
+            Vector3f angularVel = new Vector3f(0.025f, 0.05f, -0.01f);
             obj.setAngularVelocity(angularVel);
 
             Location start = new Location(world, pos.x, pos.y, pos.z);
 
             if (velocity.length() > 1e-5) {
-                var arrow = LineDisplays.spawnDebugArrow(start, Vector.fromJOML(velocity), velocity.length());
+                var arrow = LineDisplays.spawnDebugArrow(start, Vector.fromJOML(velocity),
+                        velocity.length(), 0.015F, Material.LIME_WOOL);
                 add(InspectVisualType.KINEMATICS, arrow.body());
                 add(InspectVisualType.KINEMATICS, arrow.tip());
             } else {
@@ -235,11 +321,11 @@ public class InspectVisualHandler {
                     new Vector3f(pos),
                     new Vector3f(angularVel),
                     0.3,
-                    0.35,
+                    0.75,
                     Math.PI * 1.75,
                     16,
-                    0.02F,
-                        Material.LIME_CONCRETE
+                    0.015F,
+                        Material.LIME_WOOL
                 );
 
                 if (arc.getTip() != null) {
@@ -266,6 +352,9 @@ public class InspectVisualHandler {
         for (InspectVisualType type : InspectVisualType.values()) {
             clear(type);
         }
+
+        this.postImpactSpin.stopAll(true);
+        this.currentSpin.stopAll(true);
     }
 
 }
